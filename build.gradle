@@ -1,0 +1,121 @@
+description = 'sputnik'
+
+
+apply plugin: 'maven-publish'
+apply plugin: 'java-library'
+apply plugin: 'java'
+apply plugin: 'scala'
+
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala', 'src/main/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+    test {
+        scala {
+            srcDirs = ['src/test/scala', 'src/test/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task testsJar(type: Jar) {
+    classifier = 'test'
+    from sourceSets.test.output
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+version = '4.4-SNAPSHOT'
+
+publishing {
+    publications {
+        libraryJar(MavenPublication) {
+            groupId ='com.airbnb'
+            artifactId = 'sputnik'
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            artifact testsJar
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username searchProperty('ARTIFACTORY_USERNAME')
+                password searchProperty('ARTIFACTORY_PASSWORD')
+            }
+            url version.contains("SNAPSHOT") ? SNAPSHOT_PUBLISH_URL : PROJECT_REPOSITORY_URL
+        }
+    }
+}
+
+String searchProperty(String name) {
+    if (findProperty(name) != null) {
+        return findProperty(name)
+    }
+    if (System.properties[name] != null) {
+        return System.properties[name]
+    }
+    if (System.env[name] != null) {
+        return System.env[name]
+    }
+    return ""
+}
+
+uploadArchives {
+    dependsOn publish
+}
+
+compileJava {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    scalaCompilerPlugin
+}
+
+dependencies {
+
+    compile "org.scala-lang:scala-library:2.11.12"
+    compile "com.typesafe:config:1.3.1"
+
+    compileOnly "org.apache.spark:spark-core_2.11:2.4.4"
+    compileOnly "org.apache.spark:spark-hive_2.11:2.4.4"
+    compileOnly "org.apache.spark:spark-sql_2.11:2.4.4"
+
+    testCompile "org.apache.spark:spark-core_2.11:2.4.4"
+    testCompile "org.apache.spark:spark-hive_2.11:2.4.4"
+    testCompile "org.apache.spark:spark-sql_2.11:2.4.4"
+    testCompile "org.slf4j:slf4j-api:1.7.5"
+    testCompile "org.slf4j:slf4j-log4j12:1.7.5"
+    testCompile "org.slf4j:slf4j-simple:1.7.5"
+    testCompile 'org.scalatest:scalatest_2.11:3.0.5'
+    testCompile 'junit:junit:4.12'
+}
+
+tasks.withType(ScalaCompile) {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
