@@ -14,6 +14,7 @@ restrictive code is required to implement some good practices of data engineerin
 Sputnik is a framework which helps follow good practices for data engineering of daily batch jobs working with
  data in Hive. It contains most of the code, which data engineer would need to write and operate their job. 
  This includes, but not limited to:
+
 * Reading data from source table filtered by date or date range specified in console for this job run. 
 * Backfilling data
 * Running checks on result data before inserting it into the result table
